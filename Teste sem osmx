@@ -1,0 +1,280 @@
+from math import sqrt
+
+#1-Esqueleto(parte que criar os nós e diz onde ele está):
+def montarNos():
+    nos = {
+        "A": (0, 0),
+        "B": (0, 15),
+        "G": (0, 30),
+        "H": (0, 45),
+        "C": (15, 0),
+        "D": (30, 0),
+        "E": (45, 0),
+        "F": (60, 0)
+    }
+    return nos #se não retornar, nos não são entregados quando a main chamar essa função    
+
+#2-Esqueleto(parte que cria as arestas dizendo quem se conecta com quem e a caracteristica do trecho)
+def montarArestas():
+    arestas = {
+        "A": {
+            "B": (13, 2, 1, 60),
+            "C": (10, 0, 1, 50)
+        },
+
+        "B": {
+            "A": (13, 2, 1, 60),
+            "G": (8, 1, 2, 40)
+        },
+
+        "G": {
+            "B": (8, 1, 2, 40),
+            "H": (16, 0, 3, 80)
+        },
+
+        "H": {
+            "G": (16, 0, 3, 80)
+        },
+
+        "C": {
+            "A": (10, 0, 1, 50),
+            "D": (14, 1, 0, 60)
+        },
+
+        "D": {
+            "C": (14, 1, 0, 60),
+            "E": (11, 0, 0, 30)
+        },
+
+        "E": {
+            "D": (11, 0, 0, 30),
+            "F": (9, 0, 1, 45)
+        },
+
+        "F": {
+            "E": (9, 0, 1, 45)
+        }
+    }
+    return arestas
+
+#3-Esqueleto(parte que define o ponto de partida do grafo):
+def origem():
+    origem = "A"
+    return origem
+
+#4-Esqueleto(parte que define o destino final no grafo):
+def destino():
+    destino = "F"
+    return destino
+
+#5-Esqueleto(definindo pesos):
+def pesos():
+    pesosPorItem = {
+        "semaforo" : (4), #cada semaforo add 4 de peso
+        "lombada" : (3)
+    }
+    return pesosPorItem
+
+#6-Esqueleto(executor do dijkstra):
+def dijkstra(caminhos, inicio, fim, penalidades):
+    dist = { #dicionario que guarda menor custo conhecido do inicio até cada nó
+    #dist["A"] = melhor custo conhecido para chegar em A a partir do início.
+    #dist["B"] = melhor custo conhecido para chegar em B a partir do início.
+    #etc....
+        }
+    prev = { #dicionario que guarda de onde eu vim( pontos que passei)
+    #ex: prev["C"] = "A" significa o melhor caminho conhecido para chegar em C vem de A (antes de C eu passei por A)
+        }
+    visitados = set() #set() é conjunto vazio em python
+
+    for n in caminhos.keys(): #".keys() pega todas as chaves de um dicionario, no caso, caminhos. For x in y é o loop for pegando todos os y e colocando em x"
+        dist[n]=float("inf") #float("inf")=infinito em pyhton
+        prev[n] = None
+
+    dist[inicio]=0
+
+    allNos = caminhos.keys() #coloquei todos os nós  que existem dentro de allNos
+    while len(visitados) < len(allNos):
+        melhorNo = None
+        melhorDist = float("inf")
+        for atual in allNos: #coloquei todos os nós dentro de atual
+            if atual in visitados:
+                continue   # "continue" = Pare o que você está fazendo nesta iteração do loop e vá para a próxima
+            if dist[atual] < melhorDist:
+                melhorNo=atual
+                melhorDist=dist[atual]
+        if melhorNo == None or melhorDist==float("inf"):
+            break
+        
+        visitados.add(melhorNo)
+        #print(melhorNo, melhorDist, visitados)
+
+        for vizinho in caminhos[melhorNo]: #"caminhos[melhorNo]" é onde eu pego os vizinhos do melhorNo. Lembrando que "dicionario[chave]" = “me dá o valor guardado naquela chave”
+            #print(vizinho, caminhos[melhorNo][vizinho])  #me dá os atributos da aresta que sai de melhorNo e vai até vizinho
+
+            atributosAresta=caminhos[melhorNo][vizinho]
+            d=atributosAresta[0]
+            qtdSem=atributosAresta[1]
+            qtdLomb=atributosAresta[2]
+            v=atributosAresta[3]
+            #print ("Teste: ", melhorNo, vizinho, d, qtdSem, qtdLomb, v)
+
+            custoNovoTrecho = custoArestas(d, qtdSem, qtdLomb, v, penalidades)
+            novoCusto = dist[melhorNo] + custoNovoTrecho
+            #print("Teste 2: ", melhorNo, "->", vizinho , "custo_aresta=", custoNovoTrecho, "novoCusto=",novoCusto, "distAtualVizinho=", dist[vizinho])
+
+            if novoCusto < dist[vizinho]:
+                dist[vizinho] = novoCusto
+                prev[vizinho] = melhorNo
+                #print("Atualizei:", vizinho, "dist=", dist[vizinho], "prev=", prev[vizinho])
+
+    caminhoTotal = reconstruirCaminho(prev, inicio, fim)
+
+    return dist, prev, caminhoTotal, visitados
+
+def reconstruirCaminho(prev, inicio, fim):
+    caminho = []
+    atual = fim
+    while atual != None:
+        caminho.append(atual) #.append(x) é um comando de lista que significa: .append(x) é um comando de lista que significa:
+        if atual == inicio:
+            break
+        else:
+            atual = prev[atual]
+    caminho.reverse()
+    
+    #print(caminho)
+    return caminho
+    
+#7-Esqueleto(executor do A*):
+def a_estrela(caminhos, inicio, fim, penalidades, vertices):
+    dist = { #dicionario que guarda menor custo conhecido do inicio até cada nó
+    #dist["A"] = melhor custo conhecido para chegar em A a partir do início.
+    #dist["B"] = melhor custo conhecido para chegar em B a partir do início.
+    #etc....
+        }
+    prev = { #dicionario que guarda de onde eu vim( pontos que passei)
+    #ex: prev["C"] = "A" significa o melhor caminho conhecido para chegar em C vem de A (antes de C eu passei por A)
+        }
+    visitados = set() #set() é conjunto vazio em python
+
+    for n in caminhos.keys(): #".keys() pega todas as chaves de um dicionario, no caso, caminhos. For x in y é o loop for pegando todos os y e colocando em x"
+        dist[n]=float("inf") #float("inf")=infinito em pyhton
+        prev[n] = None
+
+    dist[inicio]=0
+
+    allNos = caminhos.keys() #coloquei todos os nós  que existem dentro de allNos
+    while len(visitados) < len(allNos):
+        melhorNo = None
+        melhorF = float("inf")  #F de f(n)=g(n) (no código é o dist) + h(n) (no código é a função heuristica())
+        for atual in allNos: #coloquei todos os nós dentro de atual
+            if atual in visitados:
+                continue   # "continue" = Pare o que você está fazendo nesta iteração do loop e vá para a próxima
+            
+            f_atual = dist[atual] + heuristica(atual, fim, vertices) #f(n) = g(n) + h(n)
+
+            if f_atual < melhorF:
+                melhorNo=atual
+                melhorF=f_atual
+        if melhorNo == None or melhorF==float("inf"):
+            break
+        
+        visitados.add(melhorNo)
+        if melhorNo == fim:
+            break
+        #print(melhorNo, dist[melhorNo], dist[melhorNo] + heuristica(melhorNo, fim, vertices))
+
+        for vizinho in caminhos[melhorNo]: #"caminhos[melhorNo]" é onde eu pego os vizinhos do melhorNo. Lembrando que "dicionario[chave]" = “me dá o valor guardado naquela chave”
+            #print(vizinho, caminhos[melhorNo][vizinho])  #me dá os atributos da aresta que sai de melhorNo e vai até vizinho
+
+            atributosAresta=caminhos[melhorNo][vizinho]
+            d=atributosAresta[0]
+            qtdSem=atributosAresta[1]
+            qtdLomb=atributosAresta[2]
+            v=atributosAresta[3]
+            #print ("Teste: ", melhorNo, vizinho, d, qtdSem, qtdLomb, v)
+
+            custoNovoTrecho = custoArestas(d, qtdSem, qtdLomb, v, penalidades)
+            novoCusto = dist[melhorNo] + custoNovoTrecho
+            #print("Teste 2: ", melhorNo, "->", vizinho , "custo_aresta=", custoNovoTrecho, "novoCusto=",novoCusto, "distAtualVizinho=", dist[vizinho])
+
+            if novoCusto < dist[vizinho]:
+                dist[vizinho] = novoCusto
+                prev[vizinho] = melhorNo
+                #print("Atualizei:", vizinho, "dist=", dist[vizinho], "prev=", prev[vizinho])
+
+    caminhoTotal = reconstruirCaminho(prev, inicio, fim)
+
+    return dist, prev, caminhoTotal, visitados
+
+
+def heuristica(no, fim, vertices):
+    x0,y0=vertices[no]
+    x,y=vertices[fim]
+    hn = sqrt((x - x0)**2 + (y - y0)**2)/60
+    #print("teste raiz: ", hn)
+
+    return hn
+#8-Esqueleto(printar os resultados):
+def resultados():
+    pass
+
+
+#9-Esqueleto (comparar resultados):
+def analiseComp(distD, caminhoD, visitadosD, distA, caminhoA, visitadosA, fim):
+
+    print("Custo do Dijkstra:", distD[fim] ) #"distD" é o dicionário de custos do Dijkstra, "[fim]" pega o custo final até o destino"
+
+    print("Custo do A*:", distA[fim] )
+
+    print("Caminho do Dijkstra:", caminhoD)
+
+    print("Caminho do A*:", caminhoA)
+
+    print("Nós analisados do Dijkstra:", len(visitadosD)) #"visitadosD" é o conjunto dos nós analisados, "len(...)' pega a quantidade
+
+    print("Nós analisados do A*:",len(visitadosA) )
+
+
+def custoArestas(d, qtdSem, qtdLomb, v, penalidades):  #"penalidades" na main é = a pesos(), o que permite acessar o peso de semaforo e lombada
+    tBase= d/v
+    penTotal = qtdSem * penalidades["semaforo"] + qtdLomb * penalidades["lombada"]  #como "penalidades=pesos()" na main, "penalidades[x]" acessa o peso de x na função pesos
+    custoTotal = tBase + penTotal
+
+    return custoTotal
+
+def main():
+    vertices = montarNos() #chama a função e ja guarda ela em uma variavel para não perder os dados da função
+
+    caminhos = montarArestas()
+
+    inicio = origem()
+
+    fim = destino()
+
+    penalidades = pesos()
+
+    distD, prevD, caminhoD, visitadosD = dijkstra(caminhos, inicio, fim, penalidades)
+    #print("Dijkstra nosAnal:", len(visitadosD), visitadosD)
+
+    distA, prevA, caminhoA, visitadosA = a_estrela(caminhos, inicio, fim, penalidades, vertices)
+    #print (retornoAestrela)
+    #print("A* nosAnal:", len(visitadosA), visitadosA)
+
+    analiseComp(distD, caminhoD, visitadosD, distA, caminhoA, visitadosA, fim)
+
+
+ #   atributosCaminhoEscolhido = caminhos["A"]["B"]
+
+  #  d = atributosCaminhoEscolhido[0]
+   # qtdSem = atributosCaminhoEscolhido[1]
+   # qtdLomb = atributosCaminhoEscolhido[2]
+    #v = atributosCaminhoEscolhido[3]
+    #custoItinerario = custoArestas(d, qtdSem, qtdLomb, v, penalidades)
+
+    #print(heuristica("A","F", vertices))
+    #print(custoItinerario)
+
+    #print (retornoDij)
+main()
