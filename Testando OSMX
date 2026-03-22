@@ -1,0 +1,29 @@
+#import osmnx as ox
+
+#grafo = ox.graph_from_place("Cruzeiro, Distrito Federal, Brazil", network_type="drive") #"graph_from_place" baixa o grafo de uma rua real, "network_type="drive" ve por onde carros podem passar
+
+#print("Mapa carregado")
+#print("Quantidade de nós:", len(grafo.nodes)) #grafo.nudes são os nós do mapa
+#print("Quantidade de arestas:", len(grafo.edges)) #grafo.edges são as conexões/ruas entre os nós
+
+#"osmnx.routing.shortest_path(G, orig, dest, weight='length')" resolve o menor caminho entre um nó de origem e um nó de destino e retorna a lista de nós da rota.
+#da para fazer por latitude e longitude!!!
+
+#--------------------------------------------------------------------------------------------------------
+
+import osmnx as ox
+
+grafo = ox.graph_from_place("Cruzeiro, Distrito Federal, Brazil", network_type="drive")
+
+lista_nos = list(grafo.nodes) #"list(grafo.nodes)" transforma os nós do grafo em uma lista
+
+origem = lista_nos[0] #escolhe o primeiro no da lista
+destino = lista_nos[50] #
+
+rota = ox.routing.shortest_path(grafo, origem, destino, weight="length") #pede ao OSMnx para encontrar uma rota entre o primeiro e o 50, minimizando o tamanho da aresta
+
+print("Mapa carregado")
+print("Origem:", origem)
+print("Destino:", destino)
+print("Rota encontrada:", rota is not None) #verifica se ele encontrou uma rota
+print("Quantidade de nós na rota:", len(rota))
